@@ -1,0 +1,44 @@
+version: '3.1'
+services:
+  odoo:
+    image: odoo:12
+    container_name: odoo
+    restart: always
+    ports:
+    - "8069:8069"
+    volumes:
+    - odoo-web-data:/var/lib/odoo
+    - ./odoo/addons/:/mnt/extra-addons
+    - ./odoo/config/:/etc/odoo/
+    environment:
+    - HOST=databaseodoo
+    - USER=odoo
+    - PORT=5432
+    - PASSWORD=odoo
+    networks:
+      private:
+
+  databaseodoo:
+    image: postgres:10
+    restart: always
+    ports:
+      - "5432:5432"
+    environment:
+      - POSTGRES_DB=postgres
+      - POSTGRES_PASSWORD=odoo
+      - POSTGRES_USER=odoo
+      - PGDATA=/var/lib/postgresql/data/pgdata
+    volumes:
+      - odoo-db-data:/var/lib/postgresql/data/pgdata
+      #- ./postgresql/pg_hba.conf:/var/lib/postgresql/data/pgdata/pg_hba.conf
+    networks:
+      private:
+
+
+volumes:
+  odoo-web-data:
+  odoo-db-data:
+
+networks:
+  private:
+    driver: bridge

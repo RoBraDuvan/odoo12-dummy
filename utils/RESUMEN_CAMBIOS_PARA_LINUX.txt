@@ -1,0 +1,185 @@
+RESUMEN DE CAMBIOS PARA CORREGIR ERRORES EN SERVIDOR LINUX
+============================================================
+
+PROBLEMA ORIGINAL:
+-----------------
+En el servidor Linux aparecían errores (ERROR en rojo) de "Missing model" para:
+- stock.report
+- py3o.template
+- py3o.report
+- mass.object
+- mass.editing.wizard
+- date.range
+- date.range.type
+- date.range.generator
+- general.ledger.report.wizard
+- kardex.productos.mov
+- journal.ledger.report.wizard
+- trial.balance.report.wizard
+- open.items.report.wizard
+- aged.partner.balance.wizard
+- vat.report.wizard
+- account.change.lock.date
+
+
+SOLUCIÓN IMPLEMENTADA:
+---------------------
+Se agregaron modelos Python a los módulos dummy existentes para declarar
+estos modelos y evitar los errores "Missing model".
+
+
+ARCHIVOS CREADOS/MODIFICADOS:
+-----------------------------
+
+1. stock_enterprise/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/stock_report.py (nuevo - declara stock.report)
+
+2. report_py3o/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/py3o_template.py (nuevo - declara py3o.template)
+   - models/py3o_report.py (nuevo - declara py3o.report)
+
+3. mass_editing/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/mass_object.py (nuevo - declara mass.object)
+   - models/mass_editing_wizard.py (nuevo - declara mass.editing.wizard)
+
+4. date_range/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/date_range.py (nuevo - declara date.range)
+   - models/date_range_type.py (nuevo - declara date.range.type)
+   - models/date_range_generator.py (nuevo - declara date.range.generator)
+
+5. account_financial_report/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/account_financial_report_wizard.py (nuevo - declara todos los wizards:
+     * general.ledger.report.wizard
+     * journal.ledger.report.wizard
+     * trial.balance.report.wizard
+     * open.items.report.wizard
+     * aged.partner.balance.wizard
+     * vat.report.wizard
+     * account.change.lock.date)
+
+6. nc_kardex_productos/
+   - __init__.py (modificado - agregado: from . import models)
+   - models/__init__.py (nuevo)
+   - models/kardex_productos.py (nuevo - declara kardex.productos.mov)
+
+
+INSTRUCCIONES PARA APLICAR EN EL SERVIDOR LINUX:
+------------------------------------------------
+
+PASO 1: Copiar archivos actualizados
+-------------------------------------
+Desde Windows, copia la carpeta completa 'odoo/addons' al servidor Linux,
+reemplazando la carpeta existente.
+
+Puedes usar SCP, SFTP, rsync, o cualquier método de transferencia de archivos.
+
+Ejemplo con rsync:
+  rsync -avz odoo/addons/ usuario@servidor:/ruta/en/linux/odoo/addons/
+
+
+PASO 2: Arreglar permisos
+--------------------------
+En el servidor Linux, ejecuta:
+
+  cd /ruta/donde/esta/guevara
+  chmod +x actualizar_modulos_linux.sh
+  ./actualizar_modulos_linux.sh
+
+Este script hace TODO automáticamente:
+- Detiene Odoo
+- Arregla permisos de archivos
+- Cambia propietario a usuario odoo (UID 101)
+- Inicia Odoo
+- Actualiza los 6 módulos modificados
+- Reinicia Odoo
+
+
+PASO 3: Verificar resultado
+----------------------------
+Verifica los logs:
+  docker logs odoo --tail 100
+
+Los mensajes "Missing model" en ROJO deberían haber desaparecido.
+
+Ahora solo deberías ver mensajes INFO de "Model XXX is declared but cannot
+be loaded" que son NORMALES y NO afectan el funcionamiento.
+
+
+DIFERENCIA ENTRE INFO Y ERROR:
+------------------------------
+- INFO/WARNING (color blanco/amarillo): Normal, no afecta funcionamiento
+- ERROR (color rojo): Problema que debe corregirse
+
+Los mensajes que estabas viendo eran ERROR en rojo, ahora serán INFO.
+
+
+VERIFICACIÓN ADICIONAL:
+-----------------------
+1. Verifica que Odoo cargue sin errores rojos:
+   docker logs odoo --tail 50 | grep ERROR
+
+   No deberías ver "Missing model" aquí.
+
+2. Verifica que puedas acceder a Odoo:
+   http://ip-del-servidor:8069
+
+3. Inicia sesión y verifica que:
+   - Facturas se vean correctamente
+   - No aparezcan errores de campos faltantes
+   - Los estilos se carguen correctamente
+
+
+NOTAS IMPORTANTES:
+------------------
+- Los archivos FileNotFoundError del filestore NO son problema
+  (son adjuntos que faltan físicamente pero no afectan el funcionamiento)
+
+- Los modelos declarados son MÍNIMOS, solo lo necesario para evitar errores
+
+- Si necesitas más funcionalidad de algún módulo, tendrías que instalar
+  el módulo original completo
+
+
+PROBLEMAS COMUNES Y SOLUCIONES:
+-------------------------------
+
+Problema: Odoo no inicia después de la actualización
+Solución: Verifica permisos con 'ls -la odoo/addons/'
+          Todos los archivos deben pertenecer a UID 101 (usuario odoo)
+
+Problema: Siguen apareciendo "Missing model" en rojo
+Solución: Ejecuta manualmente la actualización:
+          docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA \
+          -u stock_enterprise,report_py3o,mass_editing,date_range,\
+          account_financial_report,nc_kardex_productos --stop-after-init"
+
+Problema: Error de importación en Python
+Solución: Verifica que existan todos los archivos __init__.py:
+          find odoo/addons -name "__init__.py" | wc -l
+          (debe ser mayor a 40)
+
+
+ARCHIVOS AUXILIARES INCLUIDOS:
+------------------------------
+- fix_permissions.sh: Script para arreglar solo permisos
+- actualizar_modulos_linux.sh: Script completo de actualización
+- INSTRUCCIONES_LINUX.txt: Instrucciones generales
+- lista_modulos.txt: Lista de todos los módulos dummy instalados
+
+
+CONTACTO Y SOPORTE:
+------------------
+Si tienes problemas, guarda los logs completos:
+  docker logs odoo > odoo_logs.txt 2>&1
+
+Y revisa específicamente la sección donde carga los módulos.

@@ -1,0 +1,95 @@
+INSTRUCCIONES PARA MIGRAR A LINUX
+===================================
+
+1. COPIAR ARCHIVOS
+------------------
+Copia toda la carpeta 'odoo/addons' desde Windows a Linux.
+Asegúrate de que la estructura sea:
+/ruta/en/linux/odoo/addons/
+├── pos_retail/
+├── web_studio/
+├── account_tax_code/
+├── stock_picking_invoice_link/
+├── gslab_backend_theme/
+├── web_cohort/
+└── ... (todos los demás módulos dummy)
+
+
+2. ARREGLAR PERMISOS EN LINUX
+------------------------------
+En el servidor Linux, ejecuta estos comandos:
+
+cd /ruta/donde/esta/guevara
+chmod +x fix_permissions.sh
+./fix_permissions.sh
+
+O manualmente:
+cd odoo/addons
+find . -type d -exec chmod 755 {} \;
+find . -type f -exec chmod 644 {} \;
+
+
+3. CAMBIAR PROPIETARIO (IMPORTANTE)
+------------------------------------
+Si Odoo corre con el usuario 'odoo', ejecuta:
+
+sudo chown -R odoo:odoo /ruta/en/linux/odoo/addons
+
+
+4. VERIFICAR DOCKER-COMPOSE
+----------------------------
+Asegúrate de que el docker-compose.yml tenga el volumen correcto:
+
+volumes:
+  - ./odoo/addons/:/mnt/extra-addons
+
+
+5. REINICIAR ODOO
+-----------------
+docker-compose restart odoo
+
+
+6. VERIFICAR LOGS
+-----------------
+docker logs odoo --tail 100
+
+Los mensajes como "Model py3o.template is declared but cannot be loaded"
+son NORMALES y NO son errores. Son solo advertencias de modelos que
+están declarados en la base de datos pero cuyos módulos originales no
+están instalados físicamente.
+
+
+SOLUCIÓN DE PROBLEMAS
+----------------------
+
+Si Odoo no arranca o no carga los módulos:
+
+1. Verificar permisos:
+   ls -la /ruta/en/linux/odoo/addons/
+
+   Deberías ver algo como:
+   drwxr-xr-x  odoo odoo  pos_retail
+   drwxr-xr-x  odoo odoo  web_studio
+
+2. Verificar que los archivos __init__.py existen:
+   find /ruta/en/linux/odoo/addons -name "__init__.py" | wc -l
+
+   Debe mostrar un número mayor a 0
+
+3. Verificar que los archivos __manifest__.py existen:
+   find /ruta/en/linux/odoo/addons -name "__manifest__.py" | wc -l
+
+4. Si el contenedor de Odoo no puede leer los archivos:
+   - Verifica que el path en docker-compose.yml sea correcto
+   - Verifica que el usuario 'odoo' dentro del contenedor tenga permisos
+
+5. Ejecutar actualización de módulos:
+   docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA --update all --stop-after-init"
+
+
+NOTAS IMPORTANTES
+-----------------
+- Los módulos dummy NO tienen toda la funcionalidad de los originales
+- Solo proveen los campos y vistas básicas para evitar errores
+- Las advertencias en logs sobre modelos no cargados son NORMALES
+- NO intentes instalar módulos que no existan físicamente
