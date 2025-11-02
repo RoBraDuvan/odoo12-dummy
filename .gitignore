@@ -6,3 +6,7 @@ txt.txt
 node_modules/**
 dist/**
 build/**
+**/__pycache__/**
+*.log
+
+*/__pycache__/*
