@@ -38,9 +38,12 @@ docker exec databaseodoo psql -U odoo -d CONTA -c "DELETE FROM ir_attachment WHE
 echo "   ✓ Cache de assets eliminado"
 echo ""
 
-# Actualizar módulos (Odoo debe estar detenido)
+# Actualizar módulos (iniciando temporalmente el contenedor)
 echo "4. Actualizando módulos..."
-docker compose run --rm odoo odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init
+docker compose up -d odoo
+sleep 5
+docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init"
+docker compose stop odoo
 echo "   ✓ Módulos actualizados"
 echo ""
 
