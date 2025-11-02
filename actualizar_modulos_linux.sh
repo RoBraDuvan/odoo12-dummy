@@ -6,8 +6,8 @@ echo "ACTUALIZANDO MÓDULOS ODOO EN LINUX"
 echo "==================================================="
 echo ""
 
-# Lista de módulos a actualizar
-MODULOS="stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos"
+# Lista de módulos a actualizar (incluye módulos web para regenerar assets)
+MODULOS="web_studio,stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos,web,web_enterprise,gslab_backend_theme"
 
 echo "Módulos a actualizar: $MODULOS"
 echo ""
@@ -35,14 +35,20 @@ sleep 5
 echo "   ✓ Odoo iniciado"
 echo ""
 
+# Limpiar cache de assets (eliminar assets compilados)
+echo "4. Limpiando cache de assets JavaScript/CSS..."
+docker exec databaseodoo psql -U odoo -d CONTA -c "DELETE FROM ir_attachment WHERE name LIKE '%assets%' OR name LIKE '%.js' OR name LIKE '%.css';"
+echo "   ✓ Cache de assets eliminado"
+echo ""
+
 # Actualizar módulos
-echo "4. Actualizando módulos..."
+echo "5. Actualizando módulos..."
 docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init"
 echo "   ✓ Módulos actualizados"
 echo ""
 
 # Reiniciar Odoo final
-echo "5. Reinicio final de Odoo..."
+echo "6. Reinicio final de Odoo..."
 docker-compose restart odoo
 echo "   ✓ Odoo reiniciado"
 echo ""
@@ -54,4 +60,7 @@ echo ""
 echo "Verifica los logs con:"
 echo "  docker logs odoo --tail 100"
 echo ""
-echo "Los mensajes 'Missing model' deberían haber desaparecido."
+echo "Consejos:"
+echo "  - Los mensajes 'Missing model' en INFO (blanco) son normales"
+echo "  - El error 'odoo.define is not a function' debería estar resuelto"
+echo "  - Intenta hacer login ahora en el navegador"
