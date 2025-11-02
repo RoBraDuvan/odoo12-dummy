@@ -14,7 +14,7 @@ echo ""
 
 # Detener Odoo
 echo "1. Deteniendo Odoo..."
-docker-compose stop odoo
+docker compose stop odoo
 echo "   ✓ Odoo detenido"
 echo ""
 
@@ -30,7 +30,7 @@ echo ""
 
 # Iniciar Odoo
 echo "3. Iniciando Odoo..."
-docker-compose start odoo
+docker compose start odoo
 sleep 5
 echo "   ✓ Odoo iniciado"
 echo ""
@@ -49,7 +49,7 @@ echo ""
 
 # Reiniciar Odoo final
 echo "6. Reinicio final de Odoo..."
-docker-compose restart odoo
+docker compose restart odoo
 echo "   ✓ Odoo reiniciado"
 echo ""
 
