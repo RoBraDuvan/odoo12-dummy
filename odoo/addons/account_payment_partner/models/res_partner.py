@@ -10,10 +10,9 @@ class ResPartner(models.Model):
         help='Etiqueta para el libro mayor de partners'
     )
 
-    total_due = fields.Monetary(
+    total_due = fields.Float(
         string='Total Due',
         compute='_compute_total_due',
-        currency_field='currency_id',
         help='Total amount due from this partner'
     )
 
