@@ -7,7 +7,7 @@ echo "==================================================="
 echo ""
 
 # Lista de módulos a actualizar (incluye módulos web para regenerar assets)
-MODULOS="web_studio,stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos,web,web_enterprise,gslab_backend_theme,account_payment_partner"
+MODULOS="web_studio,stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos,web,web_enterprise,gslab_backend_theme,account_payment_partner,purchase_invoice_link"
 
 echo "Módulos a actualizar: $MODULOS"
 echo ""
