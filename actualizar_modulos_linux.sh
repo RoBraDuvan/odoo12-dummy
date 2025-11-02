@@ -7,14 +7,16 @@ echo "==================================================="
 echo ""
 
 # Lista de módulos a actualizar (incluye módulos web para regenerar assets)
-MODULOS="web_studio,stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos,web,web_enterprise,gslab_backend_theme"
+MODULOS="web_studio,stock_enterprise,report_py3o,mass_editing,date_range,account_financial_report,nc_kardex_productos,web,web_enterprise,gslab_backend_theme,account_payment_partner"
 
 echo "Módulos a actualizar: $MODULOS"
 echo ""
 
-# Detener Odoo
-echo "1. Deteniendo Odoo..."
+# Detener Odoo completamente
+echo "1. Deteniendo Odoo completamente..."
 docker compose stop odoo
+docker compose down odoo 2>/dev/null || true
+sleep 3
 echo "   ✓ Odoo detenido"
 echo ""
 
@@ -28,29 +30,25 @@ cd ../..
 echo "   ✓ Permisos arreglados"
 echo ""
 
-# Iniciar Odoo
-echo "3. Iniciando Odoo..."
-docker compose start odoo
-sleep 5
-echo "   ✓ Odoo iniciado"
-echo ""
-
 # Limpiar cache de assets (eliminar assets compilados)
-echo "4. Limpiando cache de assets JavaScript/CSS..."
+echo "3. Limpiando cache de assets JavaScript/CSS..."
+docker compose up -d databaseodoo
+sleep 3
 docker exec databaseodoo psql -U odoo -d CONTA -c "DELETE FROM ir_attachment WHERE name LIKE '%assets%' OR name LIKE '%.js' OR name LIKE '%.css';"
 echo "   ✓ Cache de assets eliminado"
 echo ""
 
-# Actualizar módulos
-echo "5. Actualizando módulos..."
-docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init"
+# Actualizar módulos (Odoo debe estar detenido)
+echo "4. Actualizando módulos..."
+docker compose run --rm odoo odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init
 echo "   ✓ Módulos actualizados"
 echo ""
 
-# Reiniciar Odoo final
-echo "6. Reinicio final de Odoo..."
-docker compose restart odoo
-echo "   ✓ Odoo reiniciado"
+# Iniciar Odoo final
+echo "5. Iniciando Odoo..."
+docker compose up -d odoo
+sleep 5
+echo "   ✓ Odoo iniciado"
 echo ""
 
 echo "==================================================="
