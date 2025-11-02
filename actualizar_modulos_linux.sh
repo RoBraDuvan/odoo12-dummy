@@ -34,7 +34,7 @@ echo ""
 echo "3. Limpiando cache de assets JavaScript/CSS..."
 docker compose up -d databaseodoo
 sleep 3
-docker exec databaseodoo psql -U odoo -d CONTA -c "DELETE FROM ir_attachment WHERE name LIKE '%assets%' OR name LIKE '%.js' OR name LIKE '%.css';"
+docker compose exec -T databaseodoo psql -U odoo -d CONTA -c "DELETE FROM ir_attachment WHERE name LIKE '%assets%' OR name LIKE '%.js' OR name LIKE '%.css';"
 echo "   ✓ Cache de assets eliminado"
 echo ""
 
@@ -42,7 +42,7 @@ echo ""
 echo "4. Actualizando módulos..."
 docker compose up -d odoo
 sleep 5
-docker exec odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init"
+docker compose exec -T odoo sh -c "odoo -c /etc/odoo/odoo.conf -d CONTA -u $MODULOS --stop-after-init"
 docker compose stop odoo
 echo "   ✓ Módulos actualizados"
 echo ""
